@@ -21,6 +21,10 @@ function errorHandler(err, req, res, next) {
     return res.error('Terjadi kesalahan pada database', {}, 400);
   }
 
+  if (err.code === 'P2003') {
+    return res.error('Data tidak bisa dihapus karena masih terkait dengan data lain', {}, 409);
+  }
+
   // Error validasi (kalau nanti pakai Joi/express-validator dengan shape .name === 'ValidationError')
   if (err.name === 'ValidationError') {
     return res.error('Validation Error', err.errors || err.details || {}, 422);
