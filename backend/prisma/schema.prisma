@@ -158,6 +158,7 @@ model Queue {
   registration Registration @relation(fields: [registrationId], references: [id])
   poli         Poli         @relation(fields: [poliId], references: [id])
 
+  @@unique([tanggal, nomorAntrean])
   @@index([tanggal, poliId])
   @@map("queues")
 }
