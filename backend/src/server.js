@@ -4,6 +4,8 @@ const { responseWrapper } = require('./utils/response');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/auth.routes');
 const patientRoutes = require('./routes/patient.routes');
+const doctorRoutes = require('./routes/doctor.routes');
+const poliRoutes = require('./routes/poli.routes');
 
 const app = express();
 const port = process.env.PORT;
@@ -21,6 +23,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/poli', poliRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

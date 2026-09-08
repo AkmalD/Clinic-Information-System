@@ -5,7 +5,9 @@ function validate(schema) {
     if (error) {
       const errors = {};
       error.details.forEach((detail) => {
-        errors[detail.path[0]] = detail.message;
+        // Error level-object (mis. .min(1) di doctorUpdateSchema) tidak punya path spesifik
+        const key = detail.path.length ? detail.path[0] : 'general';
+        errors[key] = detail.message;
       });
       return res.error('Validation Error', errors, 422);
     }

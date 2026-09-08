@@ -18,11 +18,10 @@ function errorHandler(err, req, res, next) {
     if (err.code === 'P2025') {
       return res.error('Data tidak ditemukan', {}, 404);
     }
+    if (err.code === 'P2003') {
+      return res.error('Data tidak bisa dihapus karena masih terkait dengan data lain', {}, 409);
+    }
     return res.error('Terjadi kesalahan pada database', {}, 400);
-  }
-
-  if (err.code === 'P2003') {
-    return res.error('Data tidak bisa dihapus karena masih terkait dengan data lain', {}, 409);
   }
 
   // Error validasi (kalau nanti pakai Joi/express-validator dengan shape .name === 'ValidationError')
