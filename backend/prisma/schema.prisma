@@ -1,0 +1,222 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================
+// ENUMS
+// ==========================
+
+enum Role {
+  ADMIN
+  DOKTER
+  PETUGAS
+}
+
+enum JenisKelamin {
+  L
+  P
+}
+
+enum JenisPembayaran {
+  UMUM
+  BPJS
+  ASURANSI
+}
+
+enum StatusKunjungan {
+  MENUNGGU
+  CHECK_IN
+  PEMERIKSAAN
+  SELESAI
+}
+
+enum StatusAntrean {
+  MENUNGGU
+  DIPANGGIL
+  SELESAI
+}
+
+// ==========================
+// MASTER DATA
+// ==========================
+
+model User {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  password    String
+  role        Role
+  namaLengkap String   @map("nama_lengkap")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  doctor        Doctor?
+  registrations Registration[]
+
+  @@map("users")
+}
+
+model Poli {
+  id       Int    @id @default(autoincrement())
+  namaPoli String @map("nama_poli")
+
+  doctors       Doctor[]
+  registrations Registration[]
+  queues        Queue[]
+
+  @@map("poli")
+}
+
+model Doctor {
+  id     Int     @id @default(autoincrement())
+  userId Int?    @unique @map("user_id")
+  nama   String
+  poliId Int     @map("poli_id")
+  noSip  String? @map("no_sip")
+
+  user           User?           @relation(fields: [userId], references: [id])
+  poli           Poli            @relation(fields: [poliId], references: [id])
+  registrations  Registration[]
+  medicalRecords MedicalRecord[]
+
+  @@map("doctors")
+}
+
+model Medicine {
+  id       Int    @id @default(autoincrement())
+  namaObat String @map("nama_obat")
+  satuan   String
+
+  prescriptionItems PrescriptionItem[]
+
+  @@map("medicines")
+}
+
+model Patient {
+  id           Int          @id @default(autoincrement())
+  noRm         String       @unique @map("no_rm")
+  nik          String       @unique
+  nama         String
+  jenisKelamin JenisKelamin @map("jenis_kelamin")
+  tanggalLahir DateTime     @map("tanggal_lahir") @db.Date
+  noTelp       String       @map("no_telp")
+  alamat       String
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  registrations  Registration[]
+  medicalRecords MedicalRecord[]
+
+  @@index([nama])
+  @@map("patients")
+}
+
+// ==========================
+// TRANSAKSI KLINIK
+// ==========================
+
+model Registration {
+  id               Int             @id @default(autoincrement())
+  noRegistrasi     String          @unique @map("no_registrasi")
+  patientId        Int             @map("patient_id")
+  doctorId         Int             @map("doctor_id")
+  poliId           Int             @map("poli_id")
+  tanggalKunjungan DateTime        @map("tanggal_kunjungan") @db.Date
+  jenisPembayaran  JenisPembayaran @map("jenis_pembayaran")
+  keluhanAwal      String?         @map("keluhan_awal")
+  status           StatusKunjungan @default(MENUNGGU)
+  createdById      Int             @map("created_by")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  doctor        Doctor         @relation(fields: [doctorId], references: [id])
+  poli          Poli           @relation(fields: [poliId], references: [id])
+  createdBy     User           @relation(fields: [createdById], references: [id])
+  queue         Queue?
+  medicalRecord MedicalRecord?
+
+  @@index([tanggalKunjungan])
+  @@map("registrations")
+}
+
+model Queue {
+  id             Int           @id @default(autoincrement())
+  registrationId Int           @unique @map("registration_id")
+  nomorAntrean   String        @map("nomor_antrean")
+  poliId         Int           @map("poli_id")
+  tanggal        DateTime      @db.Date
+  status         StatusAntrean @default(MENUNGGU)
+  calledAt       DateTime?     @map("called_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+  poli         Poli         @relation(fields: [poliId], references: [id])
+
+  @@index([tanggal, poliId])
+  @@map("queues")
+}
+
+model MedicalRecord {
+  id             Int      @id @default(autoincrement())
+  registrationId Int      @unique @map("registration_id")
+  patientId      Int      @map("patient_id")
+  doctorId       Int      @map("doctor_id")
+  keluhan        String   // Subjective
+  tekananDarah   String   @map("tekanan_darah")   // Objective
+  suhuTubuh      Float    @map("suhu_tubuh")      // Objective
+  beratBadan     Float    @map("berat_badan")     // Objective
+  tinggiBadan    Float    @map("tinggi_badan")    // Objective
+  diagnosa       String                           // Assessment
+  rencanaTerapi  String   @map("rencana_terapi")  // Plan
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  registration   Registration    @relation(fields: [registrationId], references: [id])
+  patient        Patient         @relation(fields: [patientId], references: [id])
+  doctor         Doctor          @relation(fields: [doctorId], references: [id])
+  medicalActions MedicalAction[]
+  prescriptions  Prescription[]
+
+  @@map("medical_records")
+}
+
+model MedicalAction {
+  id              Int     @id @default(autoincrement())
+  medicalRecordId Int     @map("medical_record_id")
+  namaTindakan    String  @map("nama_tindakan")
+  keterangan      String?
+
+  medicalRecord MedicalRecord @relation(fields: [medicalRecordId], references: [id])
+
+  @@map("medical_actions")
+}
+
+model Prescription {
+  id              Int      @id @default(autoincrement())
+  medicalRecordId Int      @map("medical_record_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  medicalRecord MedicalRecord      @relation(fields: [medicalRecordId], references: [id])
+  items         PrescriptionItem[]
+
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id             Int    @id @default(autoincrement())
+  prescriptionId Int    @map("prescription_id")
+  medicineId     Int    @map("medicine_id")
+  dosis          String
+  jumlah         Int
+  aturanPakai    String @map("aturan_pakai")
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id])
+  medicine     Medicine     @relation(fields: [medicineId], references: [id])
+
+  @@map("prescription_items")
+}
