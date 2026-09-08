@@ -1,9 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const { responseWrapper } = require('./utils/response');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use(responseWrapper);
@@ -15,6 +17,8 @@ app.get('/api/health', (req, res) => {
 		data: {},
 	});
 });
+
+app.use('/api/auth', authRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
