@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth.routes');
 const patientRoutes = require('./routes/patient.routes');
 const doctorRoutes = require('./routes/doctor.routes');
 const poliRoutes = require('./routes/poli.routes');
+const userRoutes = require('./routes/user.routes');
 
 const app = express();
 const port = process.env.PORT;
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/poli', poliRoutes);
+app.use('/api/users', userRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
