@@ -72,7 +72,7 @@ async function getRegistrations({ date, status } = {}) {
 async function getRegistrationById(id) {
   const registration = await prisma.registration.findUnique({
     where: { id: Number(id) },
-    include: { patient: true, doctor: true, poli: true, queue: true },
+    include: { patient: true, doctor: true, poli: true, queue: true, medicalRecord: true },
   });
   if (!registration) throw new AppError('Pendaftaran tidak ditemukan', 404);
   return registration;
@@ -90,16 +90,29 @@ async function updateRegistration(id, data) {
         { status: `Hanya bisa diubah ke: ${allowed.join(', ') || '(sudah final)'}` }
       );
     }
+    if (data.status === 'SELESAI' && !registration.medicalRecord) {
+      throw new AppError('Belum ada catatan pemeriksaan (SOAP), kunjungan belum bisa diselesaikan', 400);
+    }
   }
 
-  return prisma.registration.update({
-    where: { id: Number(id) },
-    data: {
-      ...(data.jenisPembayaran && { jenisPembayaran: data.jenisPembayaran }),
-      ...(data.keluhanAwal !== undefined && { keluhanAwal: data.keluhanAwal || null }),
-      ...(data.status && { status: data.status }),
-    },
-    include: { patient: true, doctor: true, poli: true, queue: true },
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.registration.update({
+      where: { id: Number(id) },
+      data: {
+        ...(data.jenisPembayaran && { jenisPembayaran: data.jenisPembayaran }),
+        ...(data.keluhanAwal !== undefined && { keluhanAwal: data.keluhanAwal || null }),
+        ...(data.status && { status: data.status }),
+      },
+      include: { patient: true, doctor: true, poli: true, queue: true },
+    });
+
+    // Cascade: kalau kunjungan Selesai, antreannya juga ikut Selesai
+    if (data.status === 'SELESAI' && registration.queue?.status === 'DIPANGGIL') {
+      await tx.queue.update({ where: { id: registration.queue.id }, data: { status: 'SELESAI' } });
+      updated.queue.status = 'SELESAI';
+    }
+
+    return updated;
   });
 }
 
