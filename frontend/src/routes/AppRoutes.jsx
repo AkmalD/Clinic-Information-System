@@ -3,6 +3,7 @@ import ProtectedRoute from '../components/layout/ProtectedRoute';
 import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../pages/auth/LoginPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
+import PatientsPage from '../pages/patients/PatientsPage';
 
 export default function AppRoutes() {
   return (
@@ -12,7 +13,7 @@ export default function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
-          {/* route Pasien, Pendaftaran, Antrean, Pemeriksaan ditambahkan di giliran berikutnya */}
+          <Route path="/patients" element={<PatientsPage />} />
         </Route>
       </Route>
 
