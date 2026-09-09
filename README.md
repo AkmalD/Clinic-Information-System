@@ -159,7 +159,20 @@ Clinic-Information-System/
 │   ├── .env.example
 │   └── package.json
 ├── frontend/
-│   └── (React + Vite, dalam pengerjaan)
+│   ├── src/
+│   │   ├── api/             # client Axios dan fungsi request per modul
+│   │   ├── components/      # layout dan komponen bersama
+│   │   ├── context/         # AuthContext untuk login/logout
+│   │   ├── pages/           # auth, dashboard, pasien, pendaftaran, pemeriksaan
+│   │   ├── routes/          # protected routes aplikasi
+│   │   └── theme/           # konfigurasi tema Material UI
+│   ├── public/
+│   ├── .env.example
+│   └── package.json
+├── erd/
+│   └── ERD.jpg
+├── sql/
+│   └── clinic-information-system.sql
 ├── postman/
 │   └── ClinicInformationSystem_postman_collection.json
 └── README.md
@@ -249,9 +262,11 @@ File collection ada di `postman/ClinicInformationSystem_postman_collection.json`
 
 **Cara pakai**: buka folder **Auth**, jalankan salah satu dari 3 request "Login sebagai Admin/Dokter/Petugas" terlebih dahulu, script di tab Scripts otomatis menyimpan token ke collection variable (`admin_token`, `dokter_token`, `petugas_token`). Seluruh request lain di folder lain sudah otomatis memakai variable tersebut sesuai role yang dibutuhkan, tidak perlu copy-paste token manual.
 
+Pengujian endpoint dilakukan secara manual menggunakan collection tersebut. Alur utama yang perlu diverifikasi adalah login per role, CRUD pasien, pendaftaran, generate antrean, check-in, panggil antrean, simpan SOAP, simpan resep, dan menyelesaikan kunjungan.
+
 ## ERD
 
-*(Akan ditambahkan, lihat rancangan ERD di dokumen planning project)*
+File ERD ada di `erd/ERD.jpg`.
 
 ---
 
