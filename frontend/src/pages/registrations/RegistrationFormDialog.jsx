@@ -74,7 +74,6 @@ export default function RegistrationFormDialog({ open, onClose, onSubmit, server
                     if (reason === 'input') {
                       searchPatients(value);
                     }
-
                     if (reason === 'clear') {
                       setPatientOptions([]);
                     }
