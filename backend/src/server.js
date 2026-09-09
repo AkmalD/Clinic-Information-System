@@ -12,6 +12,7 @@ const queueRoutes = require('./routes/queue.routes');
 const medicalRecordRoutes = require('./routes/medicalRecord.routes');
 const prescriptionRoutes = require('./routes/prescription.routes');
 const medicineRoutes = require('./routes/medicine.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 const port = process.env.PORT;
@@ -37,6 +38,7 @@ app.use('/api/queues', queueRoutes);
 app.use('/api/medical-records', medicalRecordRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/medicines', medicineRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
