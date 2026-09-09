@@ -74,6 +74,19 @@ export default function RegistrationsPage() {
     }
   };
 
+  const handleFinish = async (registration) => {
+    setActionLoadingId(registration.id);
+    try {
+      await updateRegistration(registration.id, { status: 'SELESAI' });
+      showSnackbar('Kunjungan berhasil diselesaikan');
+      fetchData();
+    } catch (err) {
+      showSnackbar(err?.message || 'Gagal menyelesaikan kunjungan', 'error');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -126,6 +139,11 @@ export default function RegistrationsPage() {
                     )}
                     {isDokter && r.status === 'CHECK_IN' && r.queue?.status === 'MENUNGGU' && (
                       <Button size="small" variant="contained" onClick={() => handleCall(r)} disabled={actionLoadingId === r.id}>Panggil</Button>
+                    )}
+                    {isPetugas && r.status === 'PEMERIKSAAN' && (
+                      <Button size="small" color="success" onClick={() => handleFinish(r)} disabled={actionLoadingId === r.id}>
+                        Selesaikan
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>

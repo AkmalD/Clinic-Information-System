@@ -5,6 +5,7 @@ import LoginPage from '../pages/auth/LoginPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import PatientsPage from '../pages/patients/PatientsPage';
 import RegistrationsPage from '../pages/registrations/RegistrationsPage';
+import MedicalRecordsPage from '../pages/medicalRecords/MedicalRecordsPage';
 
 export default function AppRoutes() {
   return (
@@ -16,6 +17,7 @@ export default function AppRoutes() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/patients" element={<PatientsPage />} />
           <Route path="/registrations" element={<RegistrationsPage />} />
+          <Route path="/medical-records" element={<MedicalRecordsPage />} />
         </Route>
       </Route>
 
