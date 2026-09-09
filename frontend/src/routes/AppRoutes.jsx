@@ -4,6 +4,7 @@ import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../pages/auth/LoginPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import PatientsPage from '../pages/patients/PatientsPage';
+import RegistrationsPage from '../pages/registrations/RegistrationsPage';
 
 export default function AppRoutes() {
   return (
@@ -14,6 +15,7 @@ export default function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/patients" element={<PatientsPage />} />
+          <Route path="/registrations" element={<RegistrationsPage />} />
         </Route>
       </Route>
 
