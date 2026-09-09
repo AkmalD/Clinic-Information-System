@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { responseWrapper } = require('./utils/response');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/auth.routes');
@@ -16,6 +17,15 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 
 const app = express();
 const port = process.env.PORT;
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+  })
+);
+
+app.use(express.json());
+app.use(responseWrapper);
 
 app.use(express.json());
 app.use(responseWrapper);
