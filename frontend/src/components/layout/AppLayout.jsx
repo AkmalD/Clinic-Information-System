@@ -8,6 +8,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +20,8 @@ const NAV_ITEMS = [
   { label: 'Pasien', path: '/patients', icon: <PeopleIcon />, roles: ['ADMIN', 'PETUGAS', 'DOKTER'] },
   { label: 'Pendaftaran & Antrean', path: '/registrations', icon: <EventNoteIcon />, roles: ['ADMIN', 'PETUGAS', 'DOKTER'] },
   { label: 'Pemeriksaan', path: '/medical-records', icon: <MedicalServicesIcon />, roles: ['ADMIN', 'DOKTER'] },
+  { label: 'Dokter', path: '/doctors', icon: <LocalHospitalIcon />, roles: ['ADMIN'] },
+  { label: 'Akun & Role', path: '/users', icon: <ManageAccountsIcon />, roles: ['ADMIN'] },
 ];
 
 export default function AppLayout() {

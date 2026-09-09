@@ -1,6 +1,9 @@
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 
-export default function ConfirmDialog({ open, title, description, onConfirm, onCancel, loading }) {
+export default function ConfirmDialog({
+  open, title, description, onConfirm, onCancel, loading,
+  confirmLabel = 'Hapus', loadingLabel = 'Menghapus...', confirmColor = 'error',
+}) {
   return (
     <Dialog open={open} onClose={onCancel}>
       <DialogTitle>{title}</DialogTitle>
@@ -9,8 +12,8 @@ export default function ConfirmDialog({ open, title, description, onConfirm, onC
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Batal</Button>
-        <Button color="error" variant="contained" onClick={onConfirm} disabled={loading}>
-          {loading ? 'Menghapus...' : 'Hapus'}
+        <Button color={confirmColor} variant="contained" onClick={onConfirm} disabled={loading}>
+          {loading ? loadingLabel : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>
