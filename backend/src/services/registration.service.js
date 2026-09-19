@@ -1,13 +1,16 @@
 const { PrismaClient } = require('@prisma/client');
 const AppError = require('../utils/appError');
+const { generateNextQueueNumber } = require('./queue.service');
 
 const prisma = new PrismaClient();
 
-// Hanya boleh maju 1 langkah, sesuai state machine di planning
+// Hanya boleh maju sesuai target business process state machine
 const VALID_TRANSITIONS = {
   MENUNGGU: ['CHECK_IN'],
   CHECK_IN: ['PEMERIKSAAN'],
-  PEMERIKSAAN: ['SELESAI'],
+  PEMERIKSAAN: ['PEMBAYARAN', 'FARMASI', 'SELESAI'],
+  PEMBAYARAN: ['FARMASI', 'SELESAI'],
+  FARMASI: ['SELESAI'],
   SELESAI: [],
 };
 
@@ -20,7 +23,14 @@ async function ensureExists(model, id, label) {
 }
 
 async function createRegistration(data, userId) {
-  const doctor = await ensureExists('doctor', data.doctorId, 'Dokter');
+  const doctor = await prisma.doctor.findUnique({
+    where: { id: Number(data.doctorId) },
+    include: { user: true },
+  });
+  if (!doctor) {
+    throw new AppError('Dokter tidak ditemukan', 404);
+  }
+
   await ensureExists('patient', data.patientId, 'Pasien');
   await ensureExists('poli', data.poliId, 'Poli');
 
@@ -30,6 +40,14 @@ async function createRegistration(data, userId) {
     });
   }
 
+  if (doctor.user && !doctor.user.isActive) {
+    throw new AppError('Dokter yang dipilih sedang tidak aktif / bertugas', 422, {
+      doctorId: 'Akun dokter tidak aktif',
+    });
+  }
+
+  const tanggalKunjungan = new Date(data.tanggalKunjungan);
+
   return prisma.$transaction(async (tx) => {
     const created = await tx.registration.create({
       data: {
@@ -37,7 +55,7 @@ async function createRegistration(data, userId) {
         patientId: Number(data.patientId),
         doctorId: Number(data.doctorId),
         poliId: Number(data.poliId),
-        tanggalKunjungan: new Date(data.tanggalKunjungan),
+        tanggalKunjungan,
         jenisPembayaran: data.jenisPembayaran,
         keluhanAwal: data.keluhanAwal || null,
         status: 'MENUNGGU',
@@ -48,10 +66,24 @@ async function createRegistration(data, userId) {
     const tahun = created.createdAt.getFullYear();
     const noRegistrasi = `REG-${tahun}-${String(created.id).padStart(6, '0')}`;
 
+    // Auto-generate nomor antrean per poli (misal: UMU-001, GGI-001)
+    const nomorAntrean = await generateNextQueueNumber(tx, data.poliId, tanggalKunjungan);
+
+    // Buat Queue otomatis dalam transaksi yang sama
+    await tx.queue.create({
+      data: {
+        registrationId: created.id,
+        nomorAntrean,
+        poliId: Number(data.poliId),
+        tanggal: tanggalKunjungan,
+        status: 'MENUNGGU',
+      },
+    });
+
     return tx.registration.update({
       where: { id: created.id },
       data: { noRegistrasi },
-      include: { patient: true, doctor: true, poli: true },
+      include: { patient: true, doctor: true, poli: true, queue: true, invoice: true },
     });
   });
 }
@@ -64,7 +96,7 @@ async function getRegistrations({ date, status } = {}) {
 
   return prisma.registration.findMany({
     where,
-    include: { patient: true, doctor: true, poli: true, queue: true },
+    include: { patient: true, doctor: true, poli: true, queue: true, invoice: true },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -72,7 +104,7 @@ async function getRegistrations({ date, status } = {}) {
 async function getRegistrationById(id) {
   const registration = await prisma.registration.findUnique({
     where: { id: Number(id) },
-    include: { patient: true, doctor: true, poli: true, queue: true, medicalRecord: true },
+    include: { patient: true, doctor: true, poli: true, queue: true, medicalRecord: true, invoice: true },
   });
   if (!registration) throw new AppError('Pendaftaran tidak ditemukan', 404);
   return registration;

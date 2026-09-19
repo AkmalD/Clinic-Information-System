@@ -10,4 +10,20 @@ async function detail(req, res) {
   return res.success(prescription, 'Berhasil mengambil detail resep');
 }
 
-module.exports = { create, detail };
+async function queue(req, res) {
+  const { status } = req.query;
+  const prescriptions = await prescriptionService.getPrescriptionQueue({ status });
+  return res.success(prescriptions, 'Berhasil mengambil antrean resep farmasi');
+}
+
+async function dispense(req, res) {
+  const result = await prescriptionService.dispensePrescription(req.params.id, req.user.id);
+  return res.success(result, 'Obat berhasil diserahkan kepada pasien');
+}
+
+module.exports = {
+  create,
+  detail,
+  queue,
+  dispense,
+};

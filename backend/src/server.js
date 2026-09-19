@@ -14,6 +14,7 @@ const medicalRecordRoutes = require('./routes/medicalRecord.routes');
 const prescriptionRoutes = require('./routes/prescription.routes');
 const medicineRoutes = require('./routes/medicine.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 const port = process.env.PORT;
@@ -23,9 +24,6 @@ app.use(
     origin: 'http://localhost:5173',
   })
 );
-
-app.use(express.json());
-app.use(responseWrapper);
 
 app.use(express.json());
 app.use(responseWrapper);
@@ -49,6 +47,7 @@ app.use('/api/medical-records', medicalRecordRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api', paymentRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
