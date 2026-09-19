@@ -17,6 +17,7 @@ enum Role {
   ADMIN
   DOKTER
   PETUGAS
+  FARMASI
 }
 
 enum JenisKelamin {
@@ -34,6 +35,8 @@ enum StatusKunjungan {
   MENUNGGU
   CHECK_IN
   PEMERIKSAAN
+  PEMBAYARAN
+  FARMASI
   SELESAI
 }
 
@@ -41,6 +44,29 @@ enum StatusAntrean {
   MENUNGGU
   DIPANGGIL
   SELESAI
+}
+
+enum StatusPembayaran {
+  MENUNGGU_PEMBAYARAN
+  LUNAS
+  DITANGGUNG_BPJS
+  DITANGGUNG_ASURANSI
+  BATAL
+}
+
+enum MetodePembayaran {
+  TUNAI
+  QRIS
+  TRANSFER
+  GATEWAY
+  BPJS
+  ASURANSI
+}
+
+enum StatusResep {
+  MENUNGGU
+  DISERAHKAN
+  BATAL
 }
 
 // ==========================
@@ -56,14 +82,16 @@ model User {
   isActive    Boolean  @default(true) @map("is_active")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  doctor        Doctor?
-  registrations Registration[]
+  doctor                 Doctor?
+  registrations          Registration[]
+  dispensedPrescriptions Prescription[]
 
   @@map("users")
 }
 
 model Poli {
   id       Int    @id @default(autoincrement())
+  kodePoli String @unique @map("kode_poli")
   namaPoli String @map("nama_poli")
 
   doctors       Doctor[]
@@ -74,13 +102,14 @@ model Poli {
 }
 
 model Doctor {
-  id     Int     @id @default(autoincrement())
-  userId Int?    @unique @map("user_id")
-  nama   String
-  poliId Int     @map("poli_id")
-  noSip  String? @map("no_sip")
+  id              Int     @id @default(autoincrement())
+  userId          Int     @unique @map("user_id")
+  nama            String
+  poliId          Int     @map("poli_id")
+  noSip           String? @map("no_sip")
+  biayaKonsultasi Int     @default(50000) @map("biaya_konsultasi")
 
-  user           User?           @relation(fields: [userId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
   poli           Poli            @relation(fields: [poliId], references: [id])
   registrations  Registration[]
   medicalRecords MedicalRecord[]
@@ -92,6 +121,7 @@ model Medicine {
   id       Int    @id @default(autoincrement())
   namaObat String @map("nama_obat")
   satuan   String
+  harga    Int    @default(0)
 
   prescriptionItems PrescriptionItem[]
 
@@ -140,6 +170,7 @@ model Registration {
   createdBy     User           @relation(fields: [createdById], references: [id])
   queue         Queue?
   medicalRecord MedicalRecord?
+  invoice       Invoice?
 
   @@index([tanggalKunjungan])
   @@map("registrations")
@@ -158,7 +189,7 @@ model Queue {
   registration Registration @relation(fields: [registrationId], references: [id])
   poli         Poli         @relation(fields: [poliId], references: [id])
 
-  @@unique([tanggal, nomorAntrean])
+  @@unique([tanggal, poliId, nomorAntrean])
   @@index([tanggal, poliId])
   @@map("queues")
 }
@@ -198,11 +229,15 @@ model MedicalAction {
 }
 
 model Prescription {
-  id              Int      @id @default(autoincrement())
-  medicalRecordId Int      @map("medical_record_id")
-  createdAt       DateTime @default(now()) @map("created_at")
+  id              Int         @id @default(autoincrement())
+  medicalRecordId Int         @map("medical_record_id")
+  status          StatusResep @default(MENUNGGU)
+  dispensedAt     DateTime?   @map("dispensed_at")
+  dispensedById   Int?        @map("dispensed_by_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
 
   medicalRecord MedicalRecord      @relation(fields: [medicalRecordId], references: [id])
+  dispensedBy   User?              @relation(fields: [dispensedById], references: [id])
   items         PrescriptionItem[]
 
   @@map("prescriptions")
@@ -220,4 +255,27 @@ model PrescriptionItem {
   medicine     Medicine     @relation(fields: [medicineId], references: [id])
 
   @@map("prescription_items")
+}
+
+model Invoice {
+  id               Int              @id @default(autoincrement())
+  registrationId   Int              @unique @map("registration_id")
+  noInvoice        String           @unique @map("no_invoice")
+  totalBiaya       Int              @map("total_biaya")
+  biayaKonsultasi  Int              @map("biaya_konsultasi")
+  biayaTindakan    Int              @default(0) @map("biaya_tindakan")
+  biayaObat        Int              @default(0) @map("biaya_obat")
+  totalPasienBayar Int              @map("total_pasien_bayar")
+  jenisPembayaran  JenisPembayaran  @map("jenis_pembayaran")
+  status           StatusPembayaran @default(MENUNGGU_PEMBAYARAN)
+  metode           MetodePembayaran?
+  paymentToken     String?          @map("payment_token")
+  nomorPenjamin    String?          @map("nomor_penjamin")
+  paidAt           DateTime?        @map("paid_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  registration Registration @relation(fields: [registrationId], references: [id])
+
+  @@map("invoices")
 }
