@@ -9,9 +9,24 @@ const VALID_TRANSITIONS = {
   SELESAI: [],
 };
 
-async function generateNomorAntrean(tx, tanggal) {
-  const count = await tx.queue.count({ where: { tanggal } });
-  return `A${String(count + 1).padStart(3, '0')}`;
+async function generateNextQueueNumber(txOrPrisma, poliId, tanggal) {
+  const client = txOrPrisma || prisma;
+  const poli = await client.poli.findUnique({
+    where: { id: Number(poliId) },
+    select: { kodePoli: true },
+  });
+
+  const prefix = poli?.kodePoli || 'POL';
+  const targetDate = new Date(tanggal);
+
+  const count = await client.queue.count({
+    where: {
+      poliId: Number(poliId),
+      tanggal: targetDate,
+    },
+  });
+
+  return `${prefix}-${String(count + 1).padStart(3, '0')}`;
 }
 
 async function createQueue(registrationId) {
@@ -24,7 +39,7 @@ async function createQueue(registrationId) {
   if (registration.queue) throw new AppError('Pendaftaran ini sudah punya nomor antrean', 409);
 
   return prisma.$transaction(async (tx) => {
-    const nomorAntrean = await generateNomorAntrean(tx, registration.tanggalKunjungan);
+    const nomorAntrean = await generateNextQueueNumber(tx, registration.poliId, registration.tanggalKunjungan);
 
     return tx.queue.create({
       data: {
@@ -105,4 +120,11 @@ async function updateQueueStatus(id, status) {
   });
 }
 
-module.exports = { createQueue, getQueues, getQueueById, callQueue, updateQueueStatus };
+module.exports = {
+  createQueue,
+  getQueues,
+  getQueueById,
+  callQueue,
+  updateQueueStatus,
+  generateNextQueueNumber,
+};

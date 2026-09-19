@@ -22,7 +22,7 @@ const registrationSchema = Joi.object({
 const registrationUpdateSchema = Joi.object({
   jenisPembayaran: Joi.string().valid('UMUM', 'BPJS', 'ASURANSI'),
   keluhanAwal: Joi.string().allow('', null),
-  status: Joi.string().valid('MENUNGGU', 'CHECK_IN', 'PEMERIKSAAN', 'SELESAI'),
+  status: Joi.string().valid('MENUNGGU', 'CHECK_IN', 'PEMERIKSAAN', 'PEMBAYARAN', 'FARMASI', 'SELESAI'),
 })
   .min(1)
   .messages({ 'object.min': 'Minimal 1 field harus diisi untuk update' });

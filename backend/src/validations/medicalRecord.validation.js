@@ -1,10 +1,26 @@
 const Joi = require('joi');
 
 const medicalActionItemSchema = Joi.object({
-  namaTindakan: Joi.string().min(3).required().messages({
+  namaTindakan: Joi.string().min(2).required().messages({
     'any.required': 'Nama tindakan wajib diisi',
   }),
+  biaya: Joi.number().integer().min(0).default(0),
   keterangan: Joi.string().allow('', null),
+});
+
+const prescriptionItemInputSchema = Joi.object({
+  medicineId: Joi.number().integer().positive().required().messages({
+    'any.required': 'Obat wajib dipilih',
+  }),
+  dosis: Joi.string().required().messages({
+    'any.required': 'Dosis wajib diisi',
+  }),
+  jumlah: Joi.number().integer().positive().required().messages({
+    'any.required': 'Jumlah obat wajib diisi',
+  }),
+  aturanPakai: Joi.string().required().messages({
+    'any.required': 'Aturan pakai wajib diisi',
+  }),
 });
 
 const medicalRecordSchema = Joi.object({
@@ -29,6 +45,9 @@ const medicalRecordSchema = Joi.object({
   diagnosa: Joi.string().required().messages({ 'any.required': 'Diagnosa (Assessment) wajib diisi' }),
   rencanaTerapi: Joi.string().required().messages({ 'any.required': 'Rencana terapi (Plan) wajib diisi' }),
   tindakanMedis: Joi.array().items(medicalActionItemSchema).default([]),
+  resep: Joi.array().items(prescriptionItemInputSchema).default([]),
+  biayaTindakan: Joi.number().integer().min(0).default(0),
+  nomorPenjamin: Joi.string().allow('', null),
 });
 
 module.exports = { medicalRecordSchema };
