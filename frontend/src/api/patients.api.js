@@ -3,6 +3,9 @@ import axiosClient from './axiosClient';
 export function getPatients(params) {
   return axiosClient.get('/patients', { params });
 }
+export function getPatientById(id) {
+  return axiosClient.get(`/patients/${id}`);
+}
 export function createPatient(data) {
   return axiosClient.post('/patients', data);
 }

@@ -27,6 +27,6 @@ const patientSchema = Joi.object({
   alamat: Joi.string().min(5).required().messages({
     'string.min': 'Alamat minimal 5 karakter',
   }),
-});
+}).unknown(true);
 
 module.exports = { patientSchema };

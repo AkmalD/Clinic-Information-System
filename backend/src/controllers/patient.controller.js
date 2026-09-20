@@ -6,9 +6,9 @@ async function create(req, res) {
 }
 
 async function list(req, res) {
-  const { search, page, limit } = req.query;
-  const { patients, pagination } = await patientService.getPatients({ search, page, limit });
-  return res.success({ patients, pagination }, 'Berhasil mengambil daftar pasien');
+  const { search, kategori, gender, page, limit } = req.query;
+  const result = await patientService.getPatients({ search, kategori, gender, page, limit });
+  return res.success(result, 'Berhasil mengambil daftar pasien');
 }
 
 async function detail(req, res) {
