@@ -4,9 +4,11 @@ import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../pages/auth/LoginPage';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import PatientsPage from '../pages/patients/PatientsPage';
+import PatientRegistrationPage from '../pages/patients/PatientRegistrationPage';
 import RegistrationsPage from '../pages/registrations/RegistrationsPage';
 import MedicalRecordsPage from '../pages/medicalRecords/MedicalRecordsPage';
 import DoctorsPage from '../pages/doctors/DoctorsPage';
+import DoctorRegistrationPage from '../pages/doctors/DoctorRegistrationPage';
 import UsersPage from '../pages/users/UsersPage';
 
 export default function AppRoutes() {
@@ -18,11 +20,13 @@ export default function AppRoutes() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/patients" element={<PatientsPage />} />
+          <Route path="/patients/new" element={<PatientRegistrationPage />} />
           <Route path="/registrations" element={<RegistrationsPage />} />
           <Route path="/medical-records" element={<MedicalRecordsPage />} />
 
           <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route path="/doctors" element={<DoctorsPage />} />
+            <Route path="/doctors/new" element={<DoctorRegistrationPage />} />
             <Route path="/users" element={<UsersPage />} />
           </Route>
         </Route>

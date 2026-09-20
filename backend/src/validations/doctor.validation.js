@@ -35,7 +35,7 @@ const doctorSchema = Joi.object({
     'any.required': 'Password wajib diisi untuk akun login dokter',
     'string.min': 'Password minimal 6 karakter',
   }),
-});
+}).unknown(true);
 
 // Update = partial: semua field jadi opsional, minimal 1 field harus dikirim
 const doctorUpdateSchema = Joi.object({
@@ -48,6 +48,7 @@ const doctorUpdateSchema = Joi.object({
   password: Joi.string().min(6),
 })
   .min(1)
+  .unknown(true)
   .messages({
     'object.min': 'Minimal 1 field harus diisi untuk update',
   });

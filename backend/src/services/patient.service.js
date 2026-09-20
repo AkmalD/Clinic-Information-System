@@ -33,29 +33,87 @@ async function createPatient(data) {
   });
 }
 
-async function getPatients({ search = '', page = 1, limit = 10 }) {
+async function getPatients({ search = '', kategori = '', gender = '', page = 1, limit = 10 }) {
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
   const limitNum = Math.max(parseInt(limit, 10) || 10, 1);
   const skip = (pageNum - 1) * limitNum;
 
-  const where = search
-    ? {
-        OR: [
-          { nama: { contains: search, mode: 'insensitive' } },
-          { nik: { contains: search } },
-          { noRm: { contains: search } },
-        ],
-      }
-    : {};
+  const conditions = [];
 
-  const [total, patients] = await prisma.$transaction([
+  if (search) {
+    conditions.push({
+      OR: [
+        { nama: { contains: search, mode: 'insensitive' } },
+        { nik: { contains: search } },
+        { noRm: { contains: search } },
+        { noTelp: { contains: search } },
+        { alamat: { contains: search, mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  if (gender && (gender === 'L' || gender === 'P')) {
+    conditions.push({ jenisKelamin: gender });
+  }
+
+  if (kategori) {
+    const upperKategori = kategori.toUpperCase();
+    conditions.push({
+      registrations: {
+        some: {
+          jenisPembayaran: upperKategori,
+        },
+      },
+    });
+  }
+
+  const where = conditions.length > 0 ? { AND: conditions } : {};
+
+  const today = new Date();
+  const startOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+
+  const [totalFiltered, patients, totalAll, bpjsCount, umumCount, hariIniCount] = await prisma.$transaction([
     prisma.patient.count({ where }),
-    prisma.patient.findMany({ where, skip, take: limitNum, orderBy: { createdAt: 'desc' } }),
+    prisma.patient.findMany({
+      where,
+      skip,
+      take: limitNum,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        registrations: {
+          take: 1,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            doctor: { select: { nama: true } },
+            poli: { select: { namaPoli: true } },
+          },
+        },
+        _count: {
+          select: { medicalRecords: true, registrations: true },
+        },
+      },
+    }),
+    prisma.patient.count(),
+    prisma.registration.count({ where: { jenisPembayaran: 'BPJS' } }),
+    prisma.registration.count({ where: { jenisPembayaran: 'UMUM' } }),
+    prisma.patient.count({ where: { createdAt: { gte: startOfDay } } }),
   ]);
 
   return {
     patients,
-    pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: totalFiltered,
+      totalPages: Math.ceil(totalFiltered / limitNum),
+    },
+    metrics: {
+      totalPasien: totalAll,
+      bpjsCount,
+      umumCount,
+      asuransiCount: Math.max(totalAll - bpjsCount - umumCount, 0),
+      hariIniCount,
+    },
   };
 }
 

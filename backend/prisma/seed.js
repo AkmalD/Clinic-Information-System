@@ -149,6 +149,54 @@ async function main() {
     });
   }
 
+  const dokter3User = await prisma.user.upsert({
+    where: { username: 'dokter3' },
+    update: {},
+    create: {
+      username: 'dokter3',
+      password: dokterPassword,
+      role: Role.DOKTER,
+      namaLengkap: 'dr. Sarah Melati, Sp.A',
+    },
+  });
+
+  const existingDoctor3 = await prisma.doctor.findFirst({ where: { userId: dokter3User.id } });
+  if (!existingDoctor3) {
+    await prisma.doctor.create({
+      data: {
+        userId: dokter3User.id,
+        nama: 'dr. Sarah Melati, Sp.A',
+        poliId: (await prisma.poli.findFirst({ where: { kodePoli: 'ANK' } })).id,
+        noSip: '789/SIP/2026',
+        biayaKonsultasi: 75000,
+      },
+    });
+  }
+
+  const dokter4User = await prisma.user.upsert({
+    where: { username: 'dokter4' },
+    update: {},
+    create: {
+      username: 'dokter4',
+      password: dokterPassword,
+      role: Role.DOKTER,
+      namaLengkap: 'dr. Ratna Dewi, Sp.OG',
+    },
+  });
+
+  const existingDoctor4 = await prisma.doctor.findFirst({ where: { userId: dokter4User.id } });
+  if (!existingDoctor4) {
+    await prisma.doctor.create({
+      data: {
+        userId: dokter4User.id,
+        nama: 'dr. Ratna Dewi, Sp.OG',
+        poliId: (await prisma.poli.findFirst({ where: { kodePoli: 'KIA' } })).id,
+        noSip: '321/SIP/2026',
+        biayaKonsultasi: 70000,
+      },
+    });
+  }
+
   console.log('Seeding selesai.');
 }
 
